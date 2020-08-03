@@ -15,6 +15,7 @@
         # the real driver but that poses a security liability when an attacker
         # is able to create a malicious DLL in one of the default search paths.
         'OPENSSL_NO_HW',
+        '__STDC_NO_ATOMICS__',
       ],
       'conditions': [
         [ 'openssl_no_asm==1', {
