@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import optparse
 import os
 import sys
@@ -12,6 +14,12 @@ libssh2_root = os.path.join( os.path.abspath( root_dir ), 'libssh2' )
 
 sys.path.insert( 0, os.path.join( root_dir, 'build', 'gyp', 'pylib' ) )
 import gyp
+
+def host_arch():
+    machine = platform.machine()
+    if machine == 'i386':
+        return 'ia32'
+    return 'x64'
 
 # parse our options
 parser = optparse.OptionParser()
@@ -30,7 +38,7 @@ parser.add_option( '--target-arch',
                 type='choice',
                 choices=['ia32', 'x64'],
                 help='CPU architecture to build for. [default: %default]',
-                default='ia32')
+                default=host_arch() )
 
 ( options, args ) = parser.parse_args()
 
@@ -45,6 +53,11 @@ def configure_defines(o):
     """
     Configures libcurl
     """
+    # we probably can make this a config option here...
+    o.extend(['-D', 'experimental_quic=0'])
+    o.extend(['-D', 'openssl_no_asm=0'])
+    o.extend(['-D', 'debug_nghttp2=0'])
+    # general options
     o.extend(['-D', 'target_arch=%s' % getoption(options.target_arch, host_arch())])
     o.extend(['-D', 'host_arch=%s' % getoption(options.target_arch, host_arch())])
     o.extend(['-D', 'library=static_library'])
@@ -82,21 +95,13 @@ def configure_buildsystem( o ):
     shutil.copy( os.path.join( root_dir, "build\\libssh2_config.h" ),
                 os.path.join( libssh2_root, "include\\libssh2_config.h" ) )
 
-
-def host_arch():
-    machine = platform.machine()
-    if machine == 'i386':
-        return 'ia32'
-    return 'x64'
-
-
 def run_gyp( args ):
     """
     Executes gyp
     """
     rc = gyp.main( args )
     if rc != 0:
-        print 'Error running GYP'
+        print('Error running GYP')
         sys.exit( rc )
 
 # gyp arguments
